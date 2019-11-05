@@ -1,0 +1,32 @@
+{
+  "name": "orbitoid",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sirsquidness/orbitoid.git"
+  },
+  "keywords": [
+    "twitch",
+    "chat",
+    "away",
+    "screen",
+    "saver",
+    "orbit",
+    "orbital",
+    "mechanics"
+  ],
+  "author": "Chris Holman (squid@sirsquidness.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sirsquidness/orbitoid/issues"
+  },
+  "homepage": "https://github.com/sirsquidness/orbitoid#readme",
+  "dependencies": {
+    "typescript": "^3.6.4"
+  }
+}
