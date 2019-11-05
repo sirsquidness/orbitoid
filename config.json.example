@@ -1,0 +1,6 @@
+{
+    "bot_username": "your-bots-user-name",
+    "bot_secret": "your-bot-oauth-secret",
+    "bot_clientid": "your-bot-client-id",
+    "channel": "channel-name-to-monitor-as-it-appears-in-the-url"
+}

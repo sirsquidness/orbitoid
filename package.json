@@ -27,6 +27,12 @@
   },
   "homepage": "https://github.com/sirsquidness/orbitoid#readme",
   "dependencies": {
-    "typescript": "^3.6.4"
+    "@types/node": "^12.12.5",
+    "@types/request": "^2.48.3",
+    "@types/ws": "^6.0.3",
+    "request": "^2.88.0",
+    "tmi.js": "^1.5.0",
+    "typescript": "^3.6.4",
+    "ws": "^7.2.0"
   }
 }

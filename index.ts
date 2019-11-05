@@ -194,16 +194,27 @@ function asdf() {
 window.requestAnimationFrame(asdf)
 
 
-var imgs = [
-    "https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adac-2f30151b4209-profile_image-70x70.png",
-    "https://static-cdn.jtvnw.net/user-default-pictures-uv/ebb84563-db81-4b9c-8940-64ed33ccfc7b-profile_image-70x70.png",
-    "https://static-cdn.jtvnw.net/user-default-pictures-uv/dbdc9198-def8-11e9-8681-784f43822e80-profile_image-70x70.png",
-    "https://static-cdn.jtvnw.net/user-default-pictures-uv/41780b5a-def8-11e9-94d9-784f43822e80-profile_image-70x70.png",
-    "https://static-cdn.jtvnw.net/jtv_user_pictures/moobot-profile_image-31a264a72aad34f7-70x70.png"
-]
+var users: Map<string,Mass>
 
-imgs.forEach(v => {
+var client = new WebSocket("ws://localhost:8888")
+client.onmessage = (msg) => {
+    console.log(msg.data)
+    var d = JSON.parse(msg.data)
     var m = MakeMass()
-    m.Obj = new Img(v)
+    m.Obj = new Img(d['url'])
     e.Add(m)
-});
+}
+
+// var imgs = [
+//     "https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adac-2f30151b4209-profile_image-70x70.png",
+//     "https://static-cdn.jtvnw.net/user-default-pictures-uv/ebb84563-db81-4b9c-8940-64ed33ccfc7b-profile_image-70x70.png",
+//     "https://static-cdn.jtvnw.net/user-default-pictures-uv/dbdc9198-def8-11e9-8681-784f43822e80-profile_image-70x70.png",
+//     "https://static-cdn.jtvnw.net/user-default-pictures-uv/41780b5a-def8-11e9-94d9-784f43822e80-profile_image-70x70.png",
+//     "https://static-cdn.jtvnw.net/jtv_user_pictures/moobot-profile_image-31a264a72aad34f7-70x70.png"
+// ]
+
+// imgs.forEach(v => {
+//     var m = MakeMass()
+//     m.Obj = new Img(v)
+//     e.Add(m)
+// });

@@ -3,3 +3,5 @@ DefinitelyTyped/
 *.map
 *.swp
 *.d.ts
+node_modules/
+config.json
