@@ -194,15 +194,19 @@ function asdf() {
 window.requestAnimationFrame(asdf)
 
 
-var users: Map<string,Mass>
+var users: Map<string,Mass> = new Map()
 
 var client = new WebSocket("ws://localhost:8888")
 client.onmessage = (msg) => {
     console.log(msg.data)
     var d = JSON.parse(msg.data)
-    var m = MakeMass()
-    m.Obj = new Img(d['url'])
-    e.Add(m)
+    var user = d['username'] as string
+    if (users.get(user) == null) {
+        var m = MakeMass()
+        m.Obj = new Img(d['url'])
+        e.Add(m)
+        users.set(user, m)
+    }
 }
 
 // var imgs = [
