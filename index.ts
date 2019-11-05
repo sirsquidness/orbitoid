@@ -5,6 +5,7 @@ target.width = window.innerWidth
 var ctx  = target.getContext("2d")
 var i = 0
 
+
 class Thing {
     
     Colour: string
@@ -14,7 +15,7 @@ class Thing {
     }
     Draw(x: number, y: number, t: CanvasRenderingContext2D): void {
         ctx.fillStyle = this.Colour
-        ctx.fillRect(x, y,50,50)
+        ctx.fillRect(x, y,20,20)
     }
 }
 
@@ -43,9 +44,30 @@ class Vector {
         var y = this.Y - other.Y
         return Math.sqrt(x*x + y*y)
     }
+    Length(): number {
+        return Math.sqrt(this.X * this.X + this.Y * this.Y)
+    }
     UnitVector(): Vector {
         var scaleBy = 1 / this.ScalarDistanceFrom(new Vector(0,0))
         return new Vector(this.X * scaleBy, this.Y * scaleBy)
+    }
+    Rotate(rotateRadians: number): Vector {
+        var currentRadians: number
+        // avoid divide by zero
+        if (this.X == 0) {
+            currentRadians = this.Y >= 0? Math.PI/2 : Math.PI*1.5
+        } else {
+            currentRadians = Math.atan(this.Y / this.X)
+        }
+        // atan only resolves between -1/2Pi ... +1/2Pi. Need to detect ourselves if it's in the 2nd or 3rd quadrant
+        if ( this.X < 0 ) {
+            currentRadians += Math.PI
+        }
+        var nextRadians = currentRadians + rotateRadians
+        var length = this.Length()
+        var newY = Math.sin(nextRadians) * length
+        var newX = Math.cos(nextRadians) * length
+        return new Vector(newX, newY)
     }
 }
 
@@ -81,6 +103,11 @@ class Engine {
     RenderWorld(ctx: CanvasRenderingContext2D) {
         this.Things.forEach((t, outerI) => {
             var accel = new Vector(0,0)
+            // hack: if there's no velocity, we glue the object in place.
+            if (t.Velocity.X == 0 && t.Velocity.Y == 0) {
+                t.DrawWithAccel(accel, ctx)
+                return
+            }
             this.Things.forEach((ot, innerI) => {
                 if (innerI == outerI) {return}
                 accel = accel.Add(t.GetAccelWith(ot))
@@ -91,34 +118,51 @@ class Engine {
 
 }
 
+var middle = new Vector(window.innerWidth / 2, window.innerHeight /2)
+
+function randomInTheMiddle(num: number): number {
+    return Math.random() * (num *3 / 4) + num / 8
+}
+function randInt(max: number): number { return Math.floor(Math.random() * max)}
+function randomColour(): string {return `rgb(${randInt(255)},${randInt(255)},${randInt(255)})`}
+
 function MakeMass(): Mass {
     
     var m = new Mass()
-    m.Position = new Vector(Math.random() * target.width/2, Math.random() * target.height/2)
-    m.Velocity = new Vector((Math.random() * 2 -1) / 2, (Math.random() * 2 -1) / 2)
     m.Mass = Math.random() * 1000;
-    m.Obj = new Thing("rgb(255,128,200)") 
+    m.Position = new Vector(randomInTheMiddle( target.width),randomInTheMiddle(target.height))
+
+    // Generate crazy weird orbits
+    //var speed = (Math.random() * 2 - 1) * 2
+    // Generate elliptical orbits that vaguely stay on screen
+    //var speed = Math.sqrt(m.Position.ScalarDistanceFrom(middle)) / 20
+    // Generate circular orbits
+    var speed = Math.sqrt(GravConst * (m.Mass + FatMass().Mass) / m.Position.ScalarDistanceFrom(middle))
+
+    m.Velocity = m.Position.Sub(middle).UnitVector().Rotate(Math.PI/2).ScalarTimes(speed)
+    m.Obj = new Thing(randomColour())
     return m
 }
 
 function FatMass(): Mass {
     
     var m = new Mass()
-    m.Position = new Vector(target.width/2 ,target.height/2)
+    m.Position = middle
     m.Velocity = new Vector(0,0)
-    m.Mass = 1000000;
+    m.Mass = 8000000;
     m.Obj = new Thing("rgb(0,128,200)") 
     return m
 }
 
+console.log(middle)
 
 var e = new Engine()
 e.Context = ctx
-e.Things = [FatMass(), MakeMass(), MakeMass(), MakeMass()]
+e.Things = [FatMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass()]
 
 function asdf() {
-    //e.Context.clearRect(0,0,1000,1000)
+    e.Context.clearRect(0,0,target.width, target.height)
     e.RenderWorld(e.Context)
-    window.requestAnimationFrame(asdf) 
+    window.requestAnimationFrame(asdf)
 }
-window.requestAnimationFrame(asdf) 
+window.requestAnimationFrame(asdf)
