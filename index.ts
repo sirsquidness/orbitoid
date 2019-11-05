@@ -5,6 +5,8 @@ target.width = window.innerWidth
 var ctx  = target.getContext("2d")
 var i = 0
 
+const imgSize = 40
+var i = 0;
 
 class Thing {
     
@@ -18,6 +20,27 @@ class Thing {
         ctx.fillRect(x, y,20,20)
     }
 }
+class Img {
+    Source: HTMLImageElement
+
+    constructor(url: string) {
+        var i = new Image()
+        i.onload = () => {
+            this.Source = i
+        }
+        i.src = url
+    }
+    Draw(x: number, y: number, t: CanvasRenderingContext2D): void {
+        if (this.Source) {
+            ctx.save()
+            ctx.translate(x, y)
+            ctx.rotate(i++/500 * Math.PI)
+            ctx.drawImage(this.Source, -imgSize/2, -imgSize/2, imgSize, imgSize)
+            ctx.restore()
+        }
+    }
+}
+
 
 interface Drawable {
     Draw(x: number, y: number, t: CanvasRenderingContext2D): void
@@ -116,6 +139,9 @@ class Engine {
         })
     }
 
+    Add(m: Mass) {
+        this.Things.push(m)
+    }
 }
 
 var middle = new Vector(window.innerWidth / 2, window.innerHeight /2)
@@ -158,7 +184,7 @@ console.log(middle)
 
 var e = new Engine()
 e.Context = ctx
-e.Things = [FatMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass()]
+e.Things = [FatMass()] //, MakeMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass()]
 
 function asdf() {
     e.Context.clearRect(0,0,target.width, target.height)
@@ -166,3 +192,18 @@ function asdf() {
     window.requestAnimationFrame(asdf)
 }
 window.requestAnimationFrame(asdf)
+
+
+var imgs = [
+    "https://static-cdn.jtvnw.net/user-default-pictures-uv/ebe4cd89-b4f4-4cd9-adac-2f30151b4209-profile_image-70x70.png",
+    "https://static-cdn.jtvnw.net/user-default-pictures-uv/ebb84563-db81-4b9c-8940-64ed33ccfc7b-profile_image-70x70.png",
+    "https://static-cdn.jtvnw.net/user-default-pictures-uv/dbdc9198-def8-11e9-8681-784f43822e80-profile_image-70x70.png",
+    "https://static-cdn.jtvnw.net/user-default-pictures-uv/41780b5a-def8-11e9-94d9-784f43822e80-profile_image-70x70.png",
+    "https://static-cdn.jtvnw.net/jtv_user_pictures/moobot-profile_image-31a264a72aad34f7-70x70.png"
+]
+
+imgs.forEach(v => {
+    var m = MakeMass()
+    m.Obj = new Img(v)
+    e.Add(m)
+});
