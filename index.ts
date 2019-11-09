@@ -22,20 +22,21 @@ class Thing {
 }
 class Img {
     Source: HTMLImageElement
-
-    constructor(url: string) {
+    Scale: number = 1
+    constructor(url: string, scale: number = 1) {
         var i = new Image()
         i.onload = () => {
             this.Source = i
         }
         i.src = url
+        this.Scale = scale
     }
     Draw(x: number, y: number, t: CanvasRenderingContext2D): void {
         if (this.Source) {
             ctx.save()
             ctx.translate(x, y)
             ctx.rotate(i++/500 * Math.PI)
-            ctx.drawImage(this.Source, -imgSize/2, -imgSize/2, imgSize, imgSize)
+            ctx.drawImage(this.Source, (-imgSize/2)*this.Scale, (-imgSize/2)*this.Scale, imgSize*this.Scale, imgSize*this.Scale)
             ctx.restore()
         }
     }
@@ -177,7 +178,7 @@ function FatMass(img?: string): Mass {
     m.Velocity = new Vector(0,0)
     m.Mass = 8000000;
     if (img != null) {
-        m.Obj = new Img(img)
+        m.Obj = new Img(img, 4)
     } else {
         m.Obj = new Thing("rgb(0,128,200)")
     }
