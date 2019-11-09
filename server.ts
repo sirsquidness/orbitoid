@@ -46,17 +46,8 @@ function onMessageHandler (target: string, context: any, msg: string, self: stri
   }
 
   if (users.get(user) == null) {
-      var p = new Promise<string>((resolve, reject) => {
-        request.get("https://api.twitch.tv/helix/users?login=" + user, {headers: {"Client-ID": conf["bot_clientid"]}}, (err, res, body) => {
-            if (err != null) {
-                reject(err);
-                return
-            }
-            console.log(err, body, user)
-            var d = JSON.parse(body) as any
-            resolve(d["data"][0]["profile_image_url"])
-        })
-      }).then((v) => {
+      getUserProfile(user)
+      .then((v) => {
         users.set(user, v)
         sendUser(user, v)
       });
@@ -80,6 +71,21 @@ function _sendUser(user :string, url: string, socket: WebSocket): void {
     socket.send(JSON.stringify({"type:": "activity", "username": user,"url": url}))
   }
 }
+
+function getUserProfile(user: string): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    request.get("https://api.twitch.tv/helix/users?login=" + user, {headers: {"Client-ID": conf["bot_clientid"]}}, (err, res, body) => {
+        if (err != null) {
+            reject(err);
+            return
+        }
+        console.log(err, body, user)
+        var d = JSON.parse(body) as any
+        resolve(d["data"][0]["profile_image_url"])
+    })
+  })
+}
+
 // Function called when the "dice" command is issued
 function rollDice () {
   const sides = 6;
