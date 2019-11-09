@@ -103,20 +103,48 @@ interface Modifiers {
     Modify(ctx: CanvasRenderingContext2D): void
 }
 
+const bounceInterval = 0.05
+const bounceJumpInterval = 4
+const bounceDefaultSize = 1
+const bounceDirectionBig = 1
+const bounceDirectionSmall = -1
+const bounceDirectionStop = 0
+
 class BounceModifier implements Modifiers {
     lastActivity: number = 0
+    direction = bounceDirectionStop
+    targetSize = 0
+    currentSize = bounceDefaultSize
 
     OnActivity(): void {
         this.lastActivity = currentTicket
+        if (this.direction < bounceDirectionStop) {
+            this.targetSize = this.currentSize + bounceJumpInterval
+        } else {
+            this.targetSize += bounceJumpInterval
+        }
+        this.direction = bounceDirectionBig
     }
     Modify(ctx: CanvasRenderingContext2D) : void {
-        var diff = currentTicket - this.lastActivity
-        if (diff < bounceTime/2) {
-            ctx.scale(diff / 1000 + 1, diff / 1000 + 1)
-        } else if (diff < bounceTime) {
-            diff = bounceTime- diff
-            ctx.scale(diff / 1000 + 1, diff / 1000 + 1)
+        if (this.direction == bounceDirectionStop || this.currentSize < bounceDefaultSize) {
+            this.currentSize = bounceDefaultSize
+            this.direction = bounceDirectionStop
+            this.targetSize = bounceDefaultSize
+            return
+        } else if (this.direction > bounceDirectionStop) {
+            this.currentSize += bounceInterval
+            if (this.currentSize >= this.targetSize) {
+                this.direction = bounceDirectionSmall
+            }
+        } else if (this.direction < bounceDirectionStop) {
+            this.currentSize -= bounceInterval
+            if (this.currentSize <= bounceDefaultSize) {
+                this.currentSize = bounceDefaultSize
+                this.direction = bounceDirectionStop
+                this.targetSize = bounceDefaultSize
+            }
         }
+        ctx.scale(this.currentSize, this.currentSize)
     }
 }
 
