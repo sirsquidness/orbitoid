@@ -111,13 +111,11 @@ const bounceDirectionSmall = -1
 const bounceDirectionStop = 0
 
 class BounceModifier implements Modifiers {
-    lastActivity: number = 0
     direction = bounceDirectionStop
     targetSize = 0
     currentSize = bounceDefaultSize
 
     OnActivity(): void {
-        this.lastActivity = currentTicket
         if (this.direction < bounceDirectionStop) {
             this.targetSize = this.currentSize + bounceJumpInterval
         } else {
@@ -187,7 +185,7 @@ class Mass {
     }
 
     GetAccelWith(other: Mass): Vector {
-        var distance = this.ScalarDistanceFrom(other)
+        var distance = Math.max(this.ScalarDistanceFrom(other), 1)
         var force = GravConst * this.Mass * other.Mass / (distance * distance)
         var direction = other.Position.Sub(this.Position).UnitVector()
         return direction.ScalarTimes(force / this.Mass)
@@ -310,7 +308,7 @@ client.onmessage = (msg) => {
             break;
         case "host":
             var f = FatMass(d['url'])
-            e.Add(f)
+            e.Things.unshift(f)
             break;
         default:
             console.log("Unknown type received: ", d['type'])
