@@ -57,7 +57,8 @@ function onMessageHandler (target: string, context: any, msg: string, self: stri
             resolve(d["data"][0]["profile_image_url"])
         })
       }).then((v) => {
-          sendUser(user, v)
+        users.set(user, v)
+        sendUser(user, v)
       });
     
   } else if (users.get(user) instanceof String) {
@@ -70,12 +71,15 @@ function onMessageHandler (target: string, context: any, msg: string, self: stri
 
 function sendUser(user :string, url: string): void {
     server.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({"type:": "activity", "username": user,"url": url}))
-        }
-      })
+      _sendUser(user, url, client)
+    })
 }
 
+function _sendUser(user :string, url: string, socket: WebSocket): void {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({"type:": "activity", "username": user,"url": url}))
+  }
+}
 // Function called when the "dice" command is issued
 function rollDice () {
   const sides = 6;
@@ -86,3 +90,12 @@ function rollDice () {
 function onConnectedHandler (addr: string, port: string) {
   console.log(`* Connected to ${addr}:${port}`);
 }
+
+server.on("connection", (socket, req) => {
+  console.log("New connection")
+  users.forEach((url, user) => {
+    if (typeof url == "string") {
+      _sendUser(user, url as string, socket)
+    }
+  })
+})
