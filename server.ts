@@ -52,7 +52,7 @@ function onMessageHandler (target: string, context: any, msg: string, self: stri
         sendUser(user, v)
       });
     
-  } else if (users.get(user) instanceof String) {
+  } else if (typeof users.get(user) == "string") {
     sendUser(user, users.get(user) as string)
   } else {
       //TODO: do we need to do anything here?

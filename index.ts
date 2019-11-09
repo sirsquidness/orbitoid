@@ -7,6 +7,10 @@ var i = 0
 
 const imgSize = 40
 var i = 0;
+const bounceTime = 5000;
+
+// cache the time so we only need one per frame
+var currentTicket = new Date().getTime();
 
 class Thing {
     
@@ -15,7 +19,7 @@ class Thing {
     constructor(color: string) {
         this.Colour = color
     }
-    Draw(x: number, y: number, t: CanvasRenderingContext2D): void {
+    Draw(x: number, y: number, t: CanvasRenderingContext2D, m: Array<Modifiers>): void {
         ctx.fillStyle = this.Colour
         ctx.fillRect(x, y,20,20)
     }
@@ -31,11 +35,14 @@ class Img {
         i.src = url
         this.Scale = scale
     }
-    Draw(x: number, y: number, t: CanvasRenderingContext2D): void {
+    Draw(x: number, y: number, t: CanvasRenderingContext2D,  m: Array<Modifiers>): void {
         if (this.Source) {
             ctx.save()
             ctx.translate(x, y)
             ctx.rotate(i++/500 * Math.PI)
+            m.forEach((m) => {
+                m.Modify(ctx)
+            })
             ctx.drawImage(this.Source, (-imgSize/2)*this.Scale, (-imgSize/2)*this.Scale, imgSize*this.Scale, imgSize*this.Scale)
             ctx.restore()
         }
@@ -44,7 +51,7 @@ class Img {
 
 
 interface Drawable {
-    Draw(x: number, y: number, t: CanvasRenderingContext2D): void
+    Draw(x: number, y: number, t: CanvasRenderingContext2D, m: Array<Modifiers>): void
 }
 
 class Vector {
@@ -94,6 +101,27 @@ class Vector {
         return new Vector(newX, newY)
     }
 }
+interface Modifiers {
+    OnActivity(): void
+    Modify(ctx: CanvasRenderingContext2D): void
+}
+
+class BounceModifier implements Modifiers {
+    lastActivity: number = 0
+
+    OnActivity(): void {
+        this.lastActivity = currentTicket
+    }
+    Modify(ctx: CanvasRenderingContext2D) : void {
+        var diff = currentTicket - this.lastActivity
+        if (diff < bounceTime/2) {
+            ctx.scale(diff / 1000 + 1, diff / 1000 + 1)
+        } else if (diff < bounceTime) {
+            diff = bounceTime- diff
+            ctx.scale(diff / 1000 + 1, diff / 1000 + 1)
+        }
+    }
+}
 
 const GravConst = 6.674e-5 // meant to be e-11, but give it some orders of magnitude 
 class Mass {
@@ -102,10 +130,14 @@ class Mass {
     Velocity: Vector
     Mass: number // what is a sensible number range?
 
+    Modifiers: Array<Modifiers> = []
+
+    lastActivity = new Date().getTime()
+
     DrawWithAccel(accel: Vector, ctx: CanvasRenderingContext2D) {
         this.Velocity = this.Velocity.Add(accel)
         this.Position = this.Position.Add(this.Velocity)
-        this.Obj.Draw(this.Position.X, this.Position.Y, ctx)
+        this.Obj.Draw(this.Position.X, this.Position.Y, ctx, this.Modifiers)
     }
 
     GetAccelWith(other: Mass): Vector {
@@ -117,6 +149,11 @@ class Mass {
 
     ScalarDistanceFrom(other: Mass): number {
         return this.Position.ScalarDistanceFrom(other.Position)
+    }
+
+    OnActivity() {
+        this.lastActivity = currentTicket
+        this.Modifiers.forEach((v) => { v.OnActivity()})
     }
 }
 
@@ -165,7 +202,7 @@ function MakeMass(): Mass {
     //var speed = Math.sqrt(m.Position.ScalarDistanceFrom(middle)) / 20
     // Generate circular orbits
     var speed = Math.sqrt(GravConst * (m.Mass + FatMass().Mass) / m.Position.ScalarDistanceFrom(middle))
-
+    m.Modifiers = [new BounceModifier()]
     m.Velocity = m.Position.Sub(middle).UnitVector().Rotate(Math.PI/2).ScalarTimes(speed)
     m.Obj = new Thing(randomColour())
     return m
@@ -191,6 +228,7 @@ var e = new Engine()
 e.Context = ctx
 
 function asdf() {
+    currentTicket = new Date().getTime()
     e.Context.clearRect(0,0,target.width, target.height)
     e.RenderWorld(e.Context)
     window.requestAnimationFrame(asdf)
@@ -213,6 +251,7 @@ client.onmessage = (msg) => {
                 e.Add(m)
                 users.set(user, m)
             }
+            users.get(user).OnActivity()
             break;
         case "host":
             var f = FatMass(d['url'])
