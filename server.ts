@@ -68,7 +68,7 @@ function sendUser(user :string, url: string): void {
 
 function _sendUser(user :string, url: string, socket: WebSocket): void {
   if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({"type:": "activity", "username": user,"url": url}))
+    socket.send(JSON.stringify({"type": "activity", "username": user,"url": url}))
   }
 }
 
@@ -97,11 +97,16 @@ function onConnectedHandler (addr: string, port: string) {
   console.log(`* Connected to ${addr}:${port}`);
 }
 
+var hostUrl = getUserProfile(conf['channel'])
+
 server.on("connection", (socket, req) => {
   console.log("New connection")
   users.forEach((url, user) => {
     if (typeof url == "string") {
       _sendUser(user, url as string, socket)
     }
+  })
+  hostUrl.then((hostUrl) => {
+    socket.send(JSON.stringify({"type": "host", "url": hostUrl}))
   })
 })

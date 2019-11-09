@@ -121,7 +121,7 @@ class Mass {
 
 class Engine {
     Context: CanvasRenderingContext2D
-    Things: Mass[]
+    Things: Mass[] = []
 
     RenderWorld(ctx: CanvasRenderingContext2D) {
         this.Things.forEach((t, outerI) => {
@@ -170,13 +170,17 @@ function MakeMass(): Mass {
     return m
 }
 
-function FatMass(): Mass {
+function FatMass(img?: string): Mass {
     
     var m = new Mass()
     m.Position = middle
     m.Velocity = new Vector(0,0)
     m.Mass = 8000000;
-    m.Obj = new Thing("rgb(0,128,200)") 
+    if (img != null) {
+        m.Obj = new Img(img)
+    } else {
+        m.Obj = new Thing("rgb(0,128,200)")
+    }
     return m
 }
 
@@ -184,7 +188,6 @@ console.log(middle)
 
 var e = new Engine()
 e.Context = ctx
-e.Things = [FatMass()] //, MakeMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass(), MakeMass()]
 
 function asdf() {
     e.Context.clearRect(0,0,target.width, target.height)
@@ -200,12 +203,22 @@ var client = new WebSocket("ws://localhost:8888")
 client.onmessage = (msg) => {
     console.log(msg.data)
     var d = JSON.parse(msg.data)
-    var user = d['username'] as string
-    if (users.get(user) == null) {
-        var m = MakeMass()
-        m.Obj = new Img(d['url'])
-        e.Add(m)
-        users.set(user, m)
+    switch (d['type']) {
+        case "activity":
+            var user = d['username'] as string
+            if (users.get(user) == null) {
+                var m = MakeMass()
+                m.Obj = new Img(d['url'])
+                e.Add(m)
+                users.set(user, m)
+            }
+            break;
+        case "host":
+            var f = FatMass(d['url'])
+            e.Add(f)
+            break;
+        default:
+            console.log("Unknown type received: ", d['type'])
     }
 }
 
