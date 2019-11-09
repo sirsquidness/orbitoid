@@ -3,11 +3,9 @@ var target = document.getElementById("galaxy") as HTMLCanvasElement
 target.height = window.innerHeight
 target.width = window.innerWidth
 var ctx  = target.getContext("2d")
-var i = 0
 
 const imgSize = 40
-var i = 0;
-const bounceTime = 5000;
+const bounceTime = 3000;
 
 // cache the time so we only need one per frame
 var currentTicket = new Date().getTime();
@@ -39,7 +37,6 @@ class Img {
         if (this.Source) {
             ctx.save()
             ctx.translate(x, y)
-            ctx.rotate(i++/500 * Math.PI)
             m.forEach((m) => {
                 m.Modify(ctx)
             })
@@ -123,6 +120,27 @@ class BounceModifier implements Modifiers {
     }
 }
 
+class SpinModifier implements Modifiers {
+    Angle: number = 0
+    Speed: number = 0
+    MinSpeed: number = 0
+    constructor(minRotatationalVelocity: number = 0) {
+        this.MinSpeed = minRotatationalVelocity
+
+    }
+    OnActivity(): void {
+        this.Speed += 1
+    }
+    Modify(ctx: CanvasRenderingContext2D) : void {
+        this.Angle += this.Speed
+        ctx.rotate(this.Angle)
+        this.Speed -= 0.01
+        if (this.Speed < this.MinSpeed) {
+            this.Speed = this.MinSpeed
+        }
+    }
+}
+
 const GravConst = 6.674e-5 // meant to be e-11, but give it some orders of magnitude 
 class Mass {
     Obj: Drawable
@@ -185,7 +203,11 @@ class Engine {
 var middle = new Vector(window.innerWidth / 2, window.innerHeight /2)
 
 function randomInTheMiddle(num: number): number {
-    return Math.random() * (num *3 / 4) + num / 8
+    var v = Math.random() * (num /2 ) + num / 4
+    // if (Math.abs((num / 2) - v) < num / 10) {
+    //     return v * 3
+    // }
+    return v
 }
 function randInt(max: number): number { return Math.floor(Math.random() * max)}
 function randomColour(): string {return `rgb(${randInt(255)},${randInt(255)},${randInt(255)})`}
@@ -201,9 +223,13 @@ function MakeMass(): Mass {
     // Generate elliptical orbits that vaguely stay on screen
     //var speed = Math.sqrt(m.Position.ScalarDistanceFrom(middle)) / 20
     // Generate circular orbits
+    var rotationalVelocity = Math.max(Math.random() / 30, 0.02)
     var speed = Math.sqrt(GravConst * (m.Mass + FatMass().Mass) / m.Position.ScalarDistanceFrom(middle))
-    m.Modifiers = [new BounceModifier()]
+    m.Modifiers = [new BounceModifier(), new SpinModifier(rotationalVelocity)]
     m.Velocity = m.Position.Sub(middle).UnitVector().Rotate(Math.PI/2).ScalarTimes(speed)
+    if (Math.random() < 0.5) {
+        m.Velocity = m.Velocity.Rotate(Math.PI)
+    }
     m.Obj = new Thing(randomColour())
     return m
 }
@@ -214,6 +240,7 @@ function FatMass(img?: string): Mass {
     m.Position = middle
     m.Velocity = new Vector(0,0)
     m.Mass = 8000000;
+    m.Modifiers = [new SpinModifier(0.01)]
     if (img != null) {
         m.Obj = new Img(img, 4)
     } else {
@@ -269,6 +296,11 @@ client.onmessage = (msg) => {
 //     "https://static-cdn.jtvnw.net/user-default-pictures-uv/41780b5a-def8-11e9-94d9-784f43822e80-profile_image-70x70.png",
 //     "https://static-cdn.jtvnw.net/jtv_user_pictures/moobot-profile_image-31a264a72aad34f7-70x70.png"
 // ]
+
+for (var i = 0; i < 50; i++ ){
+    var m = MakeMass();
+    e.Add(m)
+}
 
 // imgs.forEach(v => {
 //     var m = MakeMass()
